@@ -11,7 +11,7 @@ pipeline {
         stage('init') {
             steps {
                 sh '''
-                echo testing for backend
+                ls -ltr
                 '''
             }
         }
