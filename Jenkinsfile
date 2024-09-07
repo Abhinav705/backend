@@ -17,10 +17,12 @@ pipeline {
                 }
             }
         }
-        stage('init') {
-            steps {
+        stage('Install Dependencies') {
+            steps { //npm install is to download the dependencies in the agent
                 sh '''
-                ls -ltr
+                npm install 
+                ls- ltr
+                echo "Application Version: $appVersion"
                 '''
             }
         }
