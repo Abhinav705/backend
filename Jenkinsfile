@@ -21,7 +21,7 @@ pipeline {
             steps { //npm install is to download the dependencies in the agent
                 sh '''
                 npm install 
-                ls- ltr
+                ls -ltr
                 echo "Application Version: $appVersion"
                 '''
             }
