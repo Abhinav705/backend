@@ -8,6 +8,15 @@ pipeline {
         ansiColor('xterm') //plugin for colors
     }
     stages {
+        stage('Read the version'){
+            steps{
+                script{ //we need to take the version from the package.json file.. we need this version for zipping process
+                    def packageJson = readJSON file: 'package.json'
+                    appVersion = packageJson.version
+                    echo "Application Version: $appVersion"
+                }
+            }
+        }
         stage('init') {
             steps {
                 sh '''
