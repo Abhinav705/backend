@@ -61,9 +61,9 @@ pipeline {
         }
         stage('Deploy'){
             steps{
-                script{
+                script{ //this will trigger backend-deploy downstream job and send appversion to it
                     def params = [
-                        string(name: 'appVersion', value: "${appVersion}") 
+                        string(name: 'appVersion', value: "${appVersion}") //param name should be same for both the jobs
                     ]
                     build job: 'backend-deploy', parameters: params, wait: false //pssing the params and sending appversion to backend-deploy job 
                 }
