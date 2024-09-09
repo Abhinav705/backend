@@ -9,6 +9,7 @@ pipeline {
     }
     environment{
         def appVersion = '' //variable declaration
+        def nexusUrl = 'http://3.85.91.24:8081/' //need to change everytime
     }
     stages {
         stage('read the version'){
@@ -37,11 +38,31 @@ pipeline {
                 """
             }
         }
+        stage('Nexus Artifact Upload'){
+            steps{
+                script{
+                    nexusArtifactUploader(
+                        nexusVersion: 'nexus3',
+                        protocol: 'http',
+                        nexusUrl: "${nexusUrl}",
+                        groupId: 'com.expense',
+                        version: "${appVersion}",
+                        repository: "backend",
+                        credentialsId: 'nexus-auth',
+                        artifacts: [
+                            [artifactId: "backend" ,
+                            classifier: '',
+                            file: "backend-" + "${appVersion}" + '.zip',
+                            type: 'zip']
+                        ]
+                    )
+                }
+            }
     }
     post { 
         always { 
             echo 'I will always say Hello again!'
-            //deleteDir()
+            deleteDir()
         }
         success { 
             echo 'I will run when pipeline is success'
