@@ -9,7 +9,7 @@ pipeline {
     }
     environment{
         def appVersion = '' //variable declaration
-        def nexusUrl = 'http://3.85.91.24:8081/' //need to change everytime
+        def nexusUrl = '3.85.91.24:8081' //need to change everytime
     }
     stages {
         stage('read the version'){
