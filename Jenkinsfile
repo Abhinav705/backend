@@ -7,6 +7,9 @@ pipeline {
         disableConcurrentBuilds()
         ansiColor('xterm')
     }
+        parameters{
+        booleanParam(name: 'deploy', defaultValue: false, description: 'Toggle this value')
+    }
     environment{
         def appVersion = '' //variable declaration
         def nexusUrl = '107.23.30.219:8081' //need to change everytime
@@ -38,6 +41,25 @@ pipeline {
                 """
             }
         }
+        stage('Sonar Scan'){
+            environment {
+                scannerHome = tool 'sonar-6.0' //referring scanner CLI
+            }
+            steps {
+                script {
+                    withSonarQubeEnv('sonar-6.0') { //referring sonar server
+                        sh "${scannerHome}/bin/sonar-scanner"
+                    }
+                }
+            }
+        }
+        stage("Quality Gate") {
+            steps {
+              timeout(time: 30, unit: 'MINUTES') {
+                waitForQualityGate abortPipeline: true
+              }
+            }
+        }
         stage('Nexus Artifact Upload'){
             steps{
                 script{
@@ -60,16 +82,20 @@ pipeline {
             }
         }
         stage('Deploy'){
+            when{
+                expression{
+                    params.deploy //deploy only when user toggles as deploy
+                }
+            }
             steps{
-                script{ //this will trigger backend-deploy downstream job and send appversion to it
+                script{
                     def params = [
-                        string(name: 'appVersion', value: "${appVersion}") //param name should be same for both the jobs
+                        string(name: 'appVersion', value: "${appVersion}")
                     ]
-                    build job: 'backend-deploy', parameters: params, wait: false //pssing the params and sending appversion to backend-deploy job 
+                    build job: 'backend-deploy', parameters: params, wait: false
                 }
             }
         }
-    }
     post { 
         always { 
             echo 'I will always say Hello again!'
