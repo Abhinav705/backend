@@ -7,12 +7,14 @@ pipeline {
         disableConcurrentBuilds()
         ansiColor('xterm')
     }
-        parameters{
+    parameters{
         booleanParam(name: 'deploy', defaultValue: false, description: 'Toggle this value')
     }
     environment{
         def appVersion = '' //variable declaration
-        def nexusUrl = '107.23.30.219:8081' //need to change everytime
+        nexusUrl = 'nexus.daws78s.online:8081'
+        region = "us-east-1"
+        account_id = "315069654700"
     }
     stages {
         stage('read the version'){
@@ -41,7 +43,30 @@ pipeline {
                 """
             }
         }
-        stage('Sonar Scan'){
+        stage('Docker build'){
+            steps{
+                sh """
+                    aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${account_id}.dkr.ecr.${region}.amazonaws.com
+
+                    docker build -t ${account_id}.dkr.ecr.${region}.amazonaws.com/expense-backend:${appVersion} .
+
+                    docker push ${account_id}.dkr.ecr.${region}.amazonaws.com/expense-backend:${appVersion}
+                """
+            }
+        }
+
+        stage('Deploy'){
+            steps{
+                sh """
+                    aws eks update-kubeconfig --region us-east-1 --name expense-dev
+                    cd helm
+                    sed -i 's/IMAGE_VERSION/${appVersion}/g' values.yaml
+                    helm upgrade backend .
+                """
+            }
+        }
+        
+        /* stage('Sonar Scan'){
             environment {
                 scannerHome = tool 'sonar-6.0' //referring scanner CLI
             }
@@ -53,14 +78,16 @@ pipeline {
                 }
             }
         }
+
         stage("Quality Gate") {
             steps {
               timeout(time: 30, unit: 'MINUTES') {
                 waitForQualityGate abortPipeline: true
               }
             }
-        }
-        stage('Nexus Artifact Upload'){
+        } */
+
+        /* stage('Nexus Artifact Upload'){
             steps{
                 script{
                     nexusArtifactUploader(
@@ -80,11 +107,11 @@ pipeline {
                     )
                 }
             }
-        }
-        stage('Deploy'){
+        } */
+        /* stage('Deploy'){
             when{
                 expression{
-                    params.deploy //deploy only when user toggles as deploy
+                    params.deploy
                 }
             }
             steps{
@@ -95,7 +122,8 @@ pipeline {
                     build job: 'backend-deploy', parameters: params, wait: false
                 }
             }
-        }
+        } */
+    }
     post { 
         always { 
             echo 'I will always say Hello again!'
